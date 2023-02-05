@@ -40,22 +40,22 @@ struct LRUBlock
 	 * A copy of the data in the pValue member. Named lpData in assert
 	 * strings.
 	 */
-	void* pData;
+	void* ptData;
 
-	/** The size, in bytes, of the data pointed to by pData. */
+	/** The size, in bytes, of the data pointed to by ptData. */
 	size_t dwSize;
 
-	/** A pointer to the original data copied to pData. */
-	void* pSource;
+	/** A pointer to the original data pointed to by ptData. */
+	void* ptSource;
 
 	/** The next block in the LRU link. */
-	LRUBlock* pNext;
+	LRUBlock* ptNext;
 
 	/** The previous block in the LRU link. */
-	LRUBlock* pPrevious;
+	LRUBlock* ptPrevious;
 };
 
-typedef void (__fastcall *DestroyBlockValueFunc)(LRUBlock* pBlock);
+typedef void (__fastcall *DestroyBlockDataFunc)(LRUBlock* ptBlock);
 
 /**
  * A cache that implements a least recently used (LRU) block replacement
@@ -82,28 +82,28 @@ struct LRUCache
 	size_t dwCommittedBlocks;
 
 	/** A pointer to an array of contiguous blocks acting as a cache. */
-	LRUBlock* pLRUBlocks;
+	LRUBlock* ptBlocks;
 
 	/** The limit on the number of committed blocks. */
 	size_t dwCommittedBlocksLimit;
 
 	/** The least recently used (LRU) block. */
-	LRUBlock* pLRUCommittedBlock;
+	LRUBlock* ptLRUCommittedBlock;
 
 	/** The most recently used (MRU) block. */
-	LRUBlock* pMRUCommittedBlock;
+	LRUBlock* ptMRUCommittedBlock;
 
 	/** The first free block that is ready to commit. */
-	LRUBlock* pFirstFreeBlock;
+	LRUBlock* ptFirstFreeBlock;
 
 	/** The last free block that is ready to commit. */
-	LRUBlock* pLastFreeBlock;
+	LRUBlock* ptLastFreeBlock;
 
 	/**
 	 * The function used to destroy the copy of the data stored by an
 	 * LRUBlock.
 	 */
-	DestroyBlockValueFunc pfnDestroyBlockValue;
+	DestroyBlockDataFunc ptfnDestroyBlockData;
 
 	/**
 	 * The number of completed operations that resulted in one or more
@@ -129,4 +129,27 @@ struct LRUCache
  * 1.10: D2CMP.0x6FDF8B30
  * 1.13C: D2CMP.0x6FE27270
  */
-void __fastcall LRUCache_Initialize(LRUCache* pLRUCache, void* pMemPool, size_t dwAllocationLimit, DestroyBlockValueFunc pfnDestroyBlockValue, size_t dwCommittedBlocksLimit);
+void __fastcall LRUCache_Initialize(LRUCache* ptLRUCache, void* pMemPool, size_t dwAllocationLimit, DestroyBlockDataFunc ptfnDestroyBlockData, size_t dwCommittedBlocksLimit);
+
+/**
+ * Destroys the LRUCache, releasing all resources.
+ *
+ * 1.00: D2CMP.0x1000CA20
+ * 1.07 Beta: D2CMPd.0x6FC84C50
+ * 1.07: D2CMP.0x6FE19130
+ * 1.10: D2CMP.0x6FDF8BF0
+ * 1.13C: Inline
+ */
+void __fastcall LRUCache_Destroy(LRUCache* ptLRUCache);
+
+/**
+ * Frees the least recently used block, or a specified block from the
+ * cache, and make the block ready to commit.
+ *
+ * 1.00: D2CMP.0x1000CC70
+ * 1.07 Beta: D2CMPd.0x6FC84FD0
+ * 1.07: D2CMP.0x6FE19300
+ * 1.10: D2CMP.0x6FDF8DC0
+ * 1.13C: D2CMP.0x6FE27400
+ */
+void __fastcall LRUCache_FreeBlock(LRUCache* ptLRUCache, LRUBlock* ptLRUBlock = NULL);
